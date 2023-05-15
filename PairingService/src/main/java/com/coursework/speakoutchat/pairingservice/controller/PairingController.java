@@ -1,9 +1,10 @@
 package com.coursework.speakoutchat.pairingservice.controller;
 
 import com.coursework.speakoutchat.pairingservice.data.SessionUserTopic;
+import com.coursework.speakoutchat.pairingservice.data.UserPair;
 import com.coursework.speakoutchat.pairingservice.data.UserTopic;
+import com.coursework.speakoutchat.pairingservice.service.PairingService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.util.Pair;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -17,26 +18,24 @@ public class PairingController {
 
     private final SimpMessagingTemplate messagingTemplate;
 
+    private final PairingService pairingService;
+
     @Autowired
-    public PairingController(SimpMessagingTemplate messagingTemplate) {
+    public PairingController(SimpMessagingTemplate messagingTemplate, PairingService pairingService) {
         this.messagingTemplate = messagingTemplate;
+        this.pairingService = pairingService;
     }
 
     private final List<SessionUserTopic> sessionUserTopics = Collections.synchronizedList(new ArrayList<>());
 
     @MessageMapping("/pair")
-    public void echoMessageMapping(@Header("simpSessionId") String sessionId, @Payload UserTopic userTopic) {
-        SessionUserTopic sessionUserTopic = sessionUserTopics.stream()
-                .filter(sessionUserWithTopic -> sessionUserWithTopic.getTopic().equals(userTopic.getTopic()))
-                .findFirst()
-                .orElse(null);
-        if (sessionUserTopic == null) {
-            sessionUserTopics.add(new SessionUserTopic(sessionId, userTopic.getUserId(), userTopic.getTopic()));
+    public void pairMessageMapping(@Header("simpSessionId") String sessionId, @Payload UserTopic userTopic) {
+        UserPair userPair = pairingService.pair(sessionId, userTopic);
+        if (userPair == null) {
             return;
         }
-        sessionUserTopics.remove(sessionUserTopic);
-        messagingTemplate.convertAndSend("/queue/greetings/" + userTopic.getUserId(), sessionUserTopic.getUserId());
-        messagingTemplate.convertAndSend("/queue/greetings/" + sessionUserTopic.getUserId(), userTopic.getUserId());
+        messagingTemplate.convertAndSend("/queue/greetings/" + userPair.getFirstUserId(), userPair.getSecondUserId());
+        messagingTemplate.convertAndSend("/queue/greetings/" + userPair.getSecondUserId(), userPair.getFirstUserId());
     }
 
     public void removeUser(String sessionId) {
