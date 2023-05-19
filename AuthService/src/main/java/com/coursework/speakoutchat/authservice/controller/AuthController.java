@@ -25,6 +25,9 @@ public class AuthController {
 
     @PostMapping("/register")
     public String addUser(@RequestBody UserCredential user) {
+        if (user.getName().isBlank() || user.getPassword().isBlank()) {
+            throw new IllegalArgumentException("UserName and Password cannot be empty");
+        }
         return service.saveUser(user);
     }
 
