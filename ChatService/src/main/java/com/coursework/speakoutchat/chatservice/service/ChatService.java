@@ -1,6 +1,7 @@
 package com.coursework.speakoutchat.chatservice.service;
 
 import com.coursework.speakoutchat.chatservice.dto.ChatMessageDto;
+import com.coursework.speakoutchat.chatservice.dto.ChatPair;
 import com.coursework.speakoutchat.chatservice.model.ChatMessage;
 import com.coursework.speakoutchat.chatservice.repository.ChatMessageRepository;
 import com.coursework.speakoutchat.chatservice.repository.ChatSessionRepository;
@@ -33,12 +34,12 @@ public class ChatService {
         messageRepository.save(message);
     }
 
-    public void saveChatSession(String sessionId, String senderId, String receiverId) {
-        sessionRepository.saveChatSession(sessionId, senderId, receiverId);
+    public void saveChatSession(ChatPair chatPair) {
+        sessionRepository.saveChatSession(chatPair);
     }
 
     @Nullable
-    public String removeAndGetPartner(String sessionId) {
-        return sessionRepository.removeAndGetPartner(sessionId);
+    public String removeAndGetPartner(String userId) {
+        return sessionRepository.removeAndGetPartner(userId);
     }
 }
