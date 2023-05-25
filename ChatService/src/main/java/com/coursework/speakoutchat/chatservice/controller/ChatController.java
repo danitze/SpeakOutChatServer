@@ -21,7 +21,6 @@ public class ChatController {
 
     @PostMapping
     public void startChat(@RequestBody ChatPair chatPair) {
-        System.out.println(chatPair.getFirstUserId() + " " + chatPair.getSecondUserId());
         service.saveChatSession(chatPair);
     }
 
