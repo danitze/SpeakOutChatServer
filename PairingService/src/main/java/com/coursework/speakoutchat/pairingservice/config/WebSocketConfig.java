@@ -1,10 +1,13 @@
 package com.coursework.speakoutchat.pairingservice.config;
 
+import com.coursework.speakoutchat.pairingservice.interceptor.SessionChannelInterceptor;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.converter.DefaultContentTypeResolver;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.converter.MessageConverter;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.socket.config.annotation.*;
@@ -16,6 +19,14 @@ import java.util.List;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    private final SessionChannelInterceptor sessionChannelInterceptor;
+
+    @Autowired
+    public WebSocketConfig(SessionChannelInterceptor sessionChannelInterceptor) {
+        this.sessionChannelInterceptor = sessionChannelInterceptor;
+    }
+
+
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/topic", "/queue", "/exchange");
@@ -25,7 +36,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/pairing-endpoint").withSockJS();
+        registry.addEndpoint("/pairing-endpoint")
+                .withSockJS();
     }
 
     @Override
@@ -37,5 +49,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         converter.setContentTypeResolver(resolver);
         messageConverters.add(converter);
         return false;
+    }
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(sessionChannelInterceptor);
     }
 }
